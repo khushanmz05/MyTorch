@@ -53,7 +53,13 @@ def load_chess_dataset(path):
             row = raw.rstrip("\n\r")
             if not row:
                 continue
-            fen, label = row.rsplit(" ", 1)
+            parts = row.split()
+
+            if len(parts) < 7:
+                raise ValueError("Expected six FEN fields followed by a label")
+
+            fen = " ".join(parts[:6])
+            label = " ".join(parts[6:])
             if label not in LABEL_TO_INDEX:
                 raise ValueError(f"Unknown label {label!r}")
             fens.append(fen.strip())

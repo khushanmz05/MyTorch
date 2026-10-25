@@ -22,11 +22,16 @@ class NeuralNetwork:
         self.loss_fn = SoftmaxCrossEntropy()
 
         for i in range(len(layer_sizes) - 1):
-            self.layers.append(Dense(layer_sizes[i], layer_sizes[i + 1], self.rng))
+            self.layers.append(
+                Dense(layer_sizes[i], layer_sizes[i + 1], self.rng)
+            )
             is_output = i == len(layer_sizes) - 2
-            self.layers.append(Activation("softmax" if is_output else hidden_activation))
-            if not is_output and dropout > 0.0:
-                self.layers.append(Dropout(dropout, self.rng))
+
+            if not is_output:
+                self.layers.append(Activation(hidden_activation))
+
+                if dropout > 0.0:
+                    self.layers.append(Dropout(dropout, self.rng))
 
     @classmethod
     def from_config(cls, config):
@@ -47,16 +52,25 @@ class NeuralNetwork:
         return np.argmax(logits, axis=1)
 
     def predict_proba(self, x):
-        return self.forward(np.atleast_2d(x), training=False)
+        from .activations import softmax
+
+        logits = self.forward(np.atleast_2d(x), training=False)
+        return softmax(logits)
 
     def train_batch(self, x, targets, optimizer):
         logits = self.forward(x, training=True)
         loss = self.loss_fn.forward(logits, targets)
         grad = self.loss_fn.backward(targets)
+
         for layer in reversed(self.layers):
             grad = layer.backward(grad)
+
+        if isinstance(optimizer, Adam):
+            optimizer.t += 1
+
         for i, layer in enumerate(self.layers):
             optimizer.step(layer, i)
+
         return loss
 
     def evaluate(self, x, targets, batch_size=256):

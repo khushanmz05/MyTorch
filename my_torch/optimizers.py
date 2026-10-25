@@ -37,7 +37,6 @@ class Adam:
         self.t = 0
 
     def step(self, layer, layer_id):
-        self.t += 1
         for grad, name in layer.gradients():
             if grad is None:
                 continue
