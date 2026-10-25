@@ -1,0 +1,37 @@
+#!/usr/bin/env python3
+"""Generate blank neural networks from configuration files."""
+
+import argparse
+import sys
+
+from my_torch import NeuralNetwork, NetworkConfig
+
+
+def main(argv=None):
+    parser = argparse.ArgumentParser(
+        prog="my_torch_generator",
+        description="Generate random neural networks from configuration files.",
+    )
+    parser.add_argument("specs", nargs="+", metavar="CONFIG_OR_COUNT")
+    args = parser.parse_args(argv)
+
+    if len(args.specs) % 2 != 0:
+        parser.error("expected pairs of CONFIG_FILE and COUNT")
+    try:
+        for i in range(0, len(args.specs), 2):
+            config_path, count = args.specs[i], int(args.specs[i + 1])
+            config = NetworkConfig.from_file(config_path)
+            base = config_path.rsplit(".", 1)[0]
+            for n in range(1, count + 1):
+                network = NeuralNetwork.from_config(config)
+                output = f"{base}_{n}.nn"
+                network.save(output)
+                print(output)
+    except (OSError, ValueError) as error:
+        print(f"my_torch_generator: {error}", file=sys.stderr)
+        return 84
+    return 0
+
+
+if __name__ == "__main__":
+    sys.exit(main())
