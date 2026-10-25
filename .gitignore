@@ -5,3 +5,6 @@ __pycache__/
 .idea/
 data/
 .venv/
+dataset/
+configs/basic_1.nn
+my_torch_network_basic.nn
